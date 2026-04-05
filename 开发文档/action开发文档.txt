@@ -1,0 +1,44 @@
+[task模式]
+1.接收传参
+type:task
+command:<指令内容>
+2.读取core\temp\cache.json，将<指令内容>输出至core\temp\cache.json的tool_log项的action项，同时输出"执行:<指令内容>"
+3.当core\temp\cache.json中：
+    tool_log.tool_use为false时，不予执行，同时：
+        整理内容为:
+            <指令内容>无法执行，请检查用户文件配置
+        输出至core\temp\cache.json的tool_log项，每一项num代表一次tool调用，所以逐行写入result，只会创建一个num项
+        运行provider\provider.py，传参：
+        type:tool
+    tool_log.tool_use为true时：
+        继续执行
+4.command内容分类：
+    command为tool_search类：
+        tool_search   
+            遍历system目录的skills,mcp,plugins的全部文件里的一级文件的.json文件
+            读取num_<数字>.command,num_<数字>.explain
+            逐行输出至core\temp\cache.json的tool_log项，每一项num代表一次tool调用，所以逐行写入result，只会创建一个num项
+            示例：
+                /查询天气 查询特定城市天气情况
+                /查询时间 查询当前时间
+        tool_search tools
+            查询工具目录，返回目录架构
+            示例：
+                plugins:core_control|time
+                skills:weather
+                mcp:
+            逐行输出至core\temp\cache.json的tool_log项，每一项num代表一次tool调用，所以逐行写入result，只会创建一个num项
+        tool_search <具体指令>
+            查询具体指令用法
+            查询到具体技能所处位置，读取<技能归类>_use.txt文件
+            逐行输出至core\temp\cache.json的tool_log项，每一项num代表一次tool调用，所以逐行写入result，只会创建一个num项
+    command为tool_use类：
+        tool_use <具体的指令+具体的指令用法注释>
+            查询到具体技能所处位置，读取.json文件中run_file数据读取<技能归类>_run文件夹，执行run_file文件
+            等待返回结果
+            添加至core\temp\cache.json的tool_log项，每一项num代表一次tool调用，所以逐行写入result，只会创建一个num项
+5.运行provider\provider.py，传参：
+type:tool
+
+<注意>
+1.core\temp\cache.json的tool_log项中工具日志最大数目不得超过single_chat_tools_use_num,要时刻更新

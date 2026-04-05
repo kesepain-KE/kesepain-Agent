@@ -1,0 +1,144 @@
+[start.py -> core/date_analyze.py]
+格式：
+type:start
+
+[core/date_analyze.py -> core/chat.py]
+格式1：
+type:start
+
+格式2：
+type:continue
+
+[core/chat.py -> system/plugins/core_control/core_chat.py]
+格式：
+/帮助
+/清除
+/退出
+
+[system/plugins/core_control/core_chat.py -> core/chat.py]
+格式1：
+type:continue
+output:<输出内容>
+
+格式2：
+type:exit
+output:<输出内容>
+
+[core/chat.py -> core/date_analyze.py]
+格式1：
+type:runed
+
+格式2：
+type:exit
+
+[core/date_analyze.py -> core/memory.py]
+格式1：
+type:read
+
+格式2：
+type:continue
+
+[core/memory.py -> core/date_analyze.py]
+格式：
+type:runed
+
+[core/date_analyze.py -> core/agent.py]
+格式1：
+type:start
+
+格式2：
+type:continue
+
+[core/agent.py -> provider/provider.py]
+格式：
+type:start
+
+[provider/provider.py -> provider/LLM运行文件]
+格式1：
+type:chat
+prompt:
+main_soul=<角色prompt内容>
+else_for_run=<task_create内容>
+base_url:<base_url>
+API_key:<API_key>
+API_model:<API_model>
+user_input:<用户输入>
+history:
+zip:<历史摘要>
+1.<time>|<input>|<output>
+2.<time>|<input>|<output>
+...
+
+格式2：
+type:tool
+prompt:
+main_soul=<角色prompt内容>
+else_for_run=<task_create内容>
+base_url:<base_url>
+API_key:<API_key>
+API_model:<API_model>
+user_input:<用户输入>
+history:
+zip:<历史摘要>
+1.<time>|<input>|<output>
+2.<time>|<input>|<output>
+...
+tool:
+1.<action>|<result>
+2.<action>|<result>
+...
+
+格式3：
+type:prompt
+prompt:<zip prompt内容>
+key:<API_KEY>
+base_url:<base_url>
+model:<model>
+zip:
+1.<time>|<input>|<output>
+2.<time>|<input>|<output>
+...
+
+[provider/LLM运行文件 -> provider/provider.py]
+格式1：
+type:message
+output:<输出内容>
+token:<token_use>
+
+格式2：
+type:task
+command:<指令内容>
+token:<token_use>
+
+格式3：
+zip:<压缩后的历史内容>
+
+[provider/provider.py -> core/date_analyze.py]
+格式：
+type:continue
+
+[provider/provider.py -> core/action.py]
+格式：
+type:task
+command:<指令内容>
+
+[core/action.py -> tool运行文件]
+格式：
+tool_use <具体指令>
+
+示例1：
+/查询时间
+
+示例2：
+/查询天气 湘潭 1
+
+示例3：
+/网络查询 315车展 杭州
+
+[tool运行文件 -> core/action.py]
+格式：
+<工具返回结果原文>
+
+[core/action.py -> provider/provider.py]
+格式：
+type:tool

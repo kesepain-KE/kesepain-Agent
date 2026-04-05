@@ -1,0 +1,31 @@
+{
+    "name": "name",
+    "prompt": "prompt",
+    "API": {
+        "provider": "provider",
+        "key": "key",
+        "model": "model"
+    },
+    "history":{
+        "history_max": "history_max",
+        "history_zip_to_num": "history_zip_to_num",
+        "memory_chat_num":"memory_chat_num"
+    },
+    "memory":{
+        "memory_path":"memory_path",
+        "memory_use":"memory_use",
+        "memory_save":"memory_save"
+    },
+    "user_input": "user_input",
+    "LLM_output": "LLM_output",
+    "history_date":{
+        "zip_date":"zip_date"
+    },
+    "tool_log":{
+        "tool_use":"tool_use",
+        "single_chat_tools_use_num": "single_chat_tools_use_num",
+        "tool_call_count": 0,
+        "current_turn_log_offset": 0
+    },
+    "token_use": 0
+}

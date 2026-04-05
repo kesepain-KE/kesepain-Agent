@@ -1,0 +1,134 @@
+[start模式]
+1.接收传参：
+type:chat
+prompt:
+main_soul=prompt
+else_for_run=task_prompt
+base_url:base_url
+API_key:API_key
+API_model:API_model
+user_input:user_input
+history:
+zip:<压缩内容>
+1.time|input|output
+...
+2.实际发送给模型的内容分类：
+   prompt:
+      main_soul
+      else_for_run
+   user:
+      user_input:user_input
+      history:
+      zip:
+      1.time|input|output
+      ...
+3.等待模型返回数据，内容处理：
+   message格式：
+      type:message
+      output:<内容>
+   task格式：
+      type:task
+      command:<指令内容>
+4.添加token消耗，示例：
+   message格式：
+      type:message
+      output:<内容>
+      token:<消耗的token>
+   task格式：
+      type:task
+      command:<指令内容>
+      token:<消耗的token>
+5.返回参数：
+   message格式：
+      type:message
+      output:<内容>
+      token:<消耗的token>
+   task格式：
+      type:task
+      command:<指令内容>
+      token:<消耗的token>
+
+[zip模式]
+1.接收传参：
+type:prompt
+prompt:zip_history.prompt
+key:zip_history.API_key
+base_url:base_url
+model:zip_history.model
+zip:
+1.time|input|output
+2.time|input|output
+3.time|input|output
+...
+2.配置后实际发送给模型的内容分类：
+   prompt:
+      prompt
+   user:
+      history:
+      1.time|input|output
+      ...
+示例：
+   prompt:
+      你是一个历史对话压缩者，请将以下对话压缩成 100 字以内的一段话，保留关键信息，不要添加额外解释。
+   user:
+      1.2026.3.2.22:40:14|你干嘛~！|猫猫不知道哦~！
+      2.2026.3.2.22:40:14|！|猫猫不知道~！
+      3.2026.3.2.22:40:14|干嘛~！|不知道哦~！
+3.模型回复后，返回参数：
+   zip:<压缩内容>
+
+[tool模式]
+1.接收传参：
+type:tool
+prompt:
+main_soul=prompt
+else_for_run=task_prompt
+base_url:base_url
+API_key:API_key
+API_model:API_model
+user_input:user_input
+history:
+zip:
+1.time|input|output
+...
+tool:
+1.action|result
+...
+2.配置后实际发送给模型的内容分类：
+   prompt:
+      main_soul
+      else_for_run
+   user:
+      user_input:user_input
+      history:
+      zip:
+      1.time|input|output
+      ...
+      tool:
+      1.action|result
+      ...
+3.等待模型返回数据，内容处理：
+   message格式：
+      type:message
+      output:<内容>
+   task格式：
+      type:task
+      command:<指令内容>
+4.添加token消耗，示例：
+   message格式：
+      type:message
+      output:<内容>
+      token:<消耗的token>
+   task格式：
+      type:task
+      command:<指令内容>
+      token:<消耗的token>
+5.返回参数：
+   message格式：
+      type:message
+      output:<内容>
+      token:<消耗的token>
+   task格式：
+      type:task
+      command:<指令内容>
+      token:<消耗的token>

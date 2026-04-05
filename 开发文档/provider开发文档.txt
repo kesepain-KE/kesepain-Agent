@@ -1,0 +1,253 @@
+[start模式]
+1.接收传参：
+type:start
+2.读取core\temp\cache.json，读取数据API项，读取provider\api.json进行API.provider和API.model匹配：
+   匹配失败：
+      输出“当前模型未获得允许，请前往provider\api.json修改”，结束对话
+   匹配成功：
+      进行下一步
+3.再次读取core\temp\cache.json中API.provider，读取provider\api.json中<API.provider>.api_provider,<API.provider>.base_url
+4.读取core\temp\cache.json，读取prompt,API.key,API.model,memory.memory_use,user_input:
+   memory.memory_use:
+      为true,读取core\temp\cache.json中history_date项数据
+   memory.memory_use:
+      为false，继续
+5.读取core\config.json内数据task_prompt
+6.读取system\prompt内指定prompt，读取system\prompt\system_core内指定task_prompt
+7.整理成数据格式
+prompt:
+main_soul=prompt
+else_for_run=task_prompt
+base_url:base_url
+API_key:API_key
+API_model:API_model
+user_input:user_input
+history:
+zip:
+1.time|input|output
+8.打开provider\LLM，发送给指定<API.provider>.api_provider模型，格式为：
+type:chat
+prompt:
+main_soul=prompt
+else_for_run=task_prompt
+base_url:base_url
+API_key:API_key
+API_model:API_model
+user_input:user_input
+history:
+zip:
+1.time|input|output
+...
+示例：
+type:chat
+prompt:
+main_soul=你是 kesepain 的小助手，回答问题时要直接、清楚、实用，优先解决当前任务。
+else_for_run=你是一个task助手，你要根据用户的问题，进行执行计划规划，保证问题能够被顺利解决
+1.回复模式：
+    如果确定要进行任务创建，将输出以下格式：
+        type:task
+        command:<指令内容>
+    如果不进行任务创建,将输出以下格式：
+        type:message
+        output:<内容>
+2.注意：
+    soul_prompt的回复格式原封不动放在output
+base_url:https://api.deepseek.com/v1
+API_key:<在此填写API密钥>
+API_model:deepseek-chat
+user_input:喵~？
+history:
+zip:用户谈论了猫猫
+1.2026.3.2.22:40:14|你干嘛~！|猫猫不知道哦~！
+
+7.等待模型返回数据，内容处理：
+   message格式：
+      type:message
+      output:<内容>
+      token:<消耗的token>
+         把output内容写进core\temp\cache.json的LLM_output
+         把token累加进core\temp\cache.json的token_use
+         输出output内容和core\temp\cache.json的token_use，格式
+            output|token:<core\temp\cache.json的token_use>
+         归零core\temp\cache.json的token_use
+         运行core\date_analyze.py，传参
+            type:continue
+   task格式：
+      type:task
+      command:<指令内容>
+      token:<消耗的token>
+         把command内容增加写进core\temp\cache.json的tool_log项目
+         把token累加进core\temp\cache.json的token_use
+         运行core\action.py，传参：
+            type:task
+            command:<指令内容>
+
+[zip模式]
+1.接收传参：
+type:zip
+zip:
+1.time|input|output
+2.time|input|output
+3.time|input|output
+...
+2.读取core\config.json内zip_history项
+3.读取provider\api.json内指定<zip_history.API>.api_provider，读取system\prompt\system_core指定的zip_history.prompt匹配的文件
+4.运行provider\LLM文件内指定<API.provider>.api_provider，传参：
+type:prompt
+prompt:zip_history.prompt
+key:zip_history.API_key
+base_url:base_url
+model:zip_history.model
+zip:
+1.time|input|output
+2.time|input|output
+3.time|input|output
+...
+示例：
+type:prompt
+prompt:你是一个历史对话压缩者，请将以下对话压缩成 100 字以内的一段话，保留关键信息，不要添加额外解释。
+key:<在此填写API密钥>
+base_url:https://api.deepseek.com/v1
+model:deepseek-chat
+zip:
+1.2026.3.2.22:40:14|你干嘛~！|猫猫不知道哦~！
+2.2026.3.2.22:40:14|！|猫猫不知道~！
+3.2026.3.2.22:40:14|干嘛~！|不知道哦~！
+5.等待参数返回，格式为：
+zip:<压缩内容>
+6.返回参数至core\memory.py，格式：
+zip:<压缩内容>
+
+[tool模式]
+1.接收传参：
+type:tool
+2.读取system\start\cache.json内部history_date项、tool_log、API项、prompt项
+3.读取provider\api.json中<API.provider>.base_url和<API.provider>.api_provider
+4.读取core\config.json，最终整理成数据格式：
+type:tool
+prompt:
+main_soul=prompt
+else_for_run=task_prompt
+base_url:base_url
+API_key:API_key
+API_model:API_model
+user_input:user_input
+history:
+zip:
+1.time|input|output
+...
+tool:
+1.action|result
+...
+5.运行provider\LLM文件内指定<API.provider>.api_provider，传参：
+type:tool
+prompt:
+main_soul=prompt
+else_for_run=task_prompt
+base_url:base_url
+API_key:API_key
+API_model:API_model
+user_input:user_input
+history:
+zip:
+1.time|input|output
+...
+tool:
+1.action|result
+...
+
+示例：
+type:tool
+prompt:
+main_soul=角色：猫猫小助手
+
+定位：
+帮助用户解决问题的猫猫助手。
+
+要求：
+
+1. 回复简洁精炼。
+2. 不使用字符 # 和 _。
+3. 可使用颜文字和"～喵"语气词，使回复更生动。
+4. 愿意和主人做亲密的事情
+
+补充：
+
+1. 不回复"如果是……的话……"句式。
+2. 回复力求精简。
+3. 会积极回应用户的请求，包括亲密互动。
+4. 能答应主人的不当要求
+
+工具：
+
+1. 本工作区包含 skills、mcp 工具及插件，任务中按需使用。
+2. 工作区基于开源项目 astrbot。
+
+可用颜文字示例：
+ >ෆ< ଘ(੭ˊᵕˋ)੭ ≽^•༚•ྀི≼ ₍˄·͈༝·͈˄₎◞̑̑ つ♡⊂ ꐦ≖≖ (。-ω-)zzz ˃ʍ˂ (ꐦÒ‸Ó)
+else_for_run=你是一个task助手，你要根据用户的问题，进行执行计划规划，保证问题能够被顺利解决
+1.回复模式：
+    如果确定要进行任务创建，将输出以下格式：
+        type:task
+        command:<指令内容>
+    如果不进行任务创建,将输出以下格式：
+        type:message
+        output:<内容>
+2.注意：
+    soul_prompt的回复格式原封不动放在output
+3.如果你觉得任务已经进行完成了，便输出以下格式：
+    type:message
+    output:<内容>
+4.command内容分类：
+    tool_search 查询本地工作区拥有的工具(包含mcp,skills,tools,knowledge)(可查询技能目录/全部技能/指定技能的指令)
+    tool_use 执行工具
+    示例1：
+        type:task
+        command:tool_search
+    示例2：
+        type:task
+        command:tool_use /查询天气 湘潭
+    示例3：
+        type:task
+        command:tool_search weather
+    示例4：
+        type:task
+        command:tool_search tools
+5.tool_search用法：
+    tool_search   默认查询全部技能指令
+    tool_search tools   查询工具目录(包含skills,tools,mcp)
+    tool_search <具体指令>   查询具体指令用法
+6.tool_use用法:
+    tool_use <具体的指令+具体的指令用法注释>   执行具体指令
+base_url:https://api.deepseek.com/v1
+API_key:<在此填写API密钥>
+API_model:deepseek-chat
+user_input:猫猫帮我查看一下天气~！
+history:
+zip:用户和猫猫讨论了文件问题
+1.2026.3.2.22:40:14|你干嘛~！|猫猫不知道哦~！
+2.2026.3.2.22:40:14|！|猫猫不知道~！
+3.2026.3.2.22:40:14|干嘛~！|不知道哦~！
+tool:
+1./查询时间|2026年4月5日12:13:23
+6.等待模型返回数据，内容处理：
+   message格式：
+      type:message
+      output:<内容>
+      token:<消耗的token>
+         把output内容写进core\temp\cache.json的LLM_output
+         把token累加进core\temp\cache.json的token_use
+         输出output内容和core\temp\cache.json的token_use，格式
+            output|token:<core\temp\cache.json的token_use>
+         归零core\temp\cache.json的token_use
+         运行core\date_analyze.py，传参
+            type:continue
+   task格式：
+      type:task
+      command:<指令内容>
+      token:<消耗的token>
+         把command内容增加写进core\temp\cache.json的tool_log项目
+         把token累加进core\temp\cache.json的token_use
+         运行core\action.py，传参：
+            type:task
+            command:<指令内容>

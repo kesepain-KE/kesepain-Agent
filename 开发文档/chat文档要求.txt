@@ -1,0 +1,17 @@
+[start模式]
+1.接收传参:
+type:start
+2.输出提示“请输入文本：”
+3.用户输出后，读取core\temp\cache.json
+4.添加输入文本至user_input项
+5.返回参数：
+type:runed
+
+[continue模式]
+1.接收传参:
+type:continue
+2.输出提示“请继续输入文本：”
+3.用户输出后，读取core\temp\cache.json
+4.添加输入文本至user_input项
+5.返回参数：
+type:runed

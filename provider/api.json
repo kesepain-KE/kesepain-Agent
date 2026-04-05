@@ -1,0 +1,11 @@
+{
+    "deepseek": {
+        "name": "deepseek",
+        "available_models": [
+            "deepseek-chat",
+            "deepseek-reasoner"
+        ],
+        "base_url": "https://api.deepseek.com/v1",
+        "api_provider": "openai_api.py"
+    }
+}

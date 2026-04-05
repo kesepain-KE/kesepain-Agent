@@ -1,0 +1,19 @@
+{
+    "zip_chat": [],
+    "standard_chat": {
+        "messages": {
+            "num_1": {
+                "num": 1,
+                "time": "time",
+                "input": "input",
+                "output": "output"
+            },
+            "num_2": {
+                "num": 2,
+                "time": "time",
+                "input": "input",
+                "output": "output"
+            }
+        }
+    }
+}

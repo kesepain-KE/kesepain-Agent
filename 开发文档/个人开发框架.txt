@@ -1,0 +1,262 @@
+kesepain-Agent 当前代码事实总览
+更新时间：2026-04-05
+
+一、文档定位
+1. 本文只描述当前仓库已经存在并实际运行的实现。
+2. 代码是唯一事实来源，本文用于同步当前实现状态。
+3. 文档与代码冲突时，以代码为准。
+4. 本文重点说明主链、工具闭环、配置来源和维护规则，不展开逐函数细节。
+
+二、当前目录结构
+kesepain-Agent/
+|- start.py
+|- core/
+|  |- action.py
+|  |- agent.py
+|  |- chat.py
+|  |- config.json
+|  |- date_analyze.py
+|  |- memory.py
+|  |- temp/cache.json
+|- provider/
+|  |- api.json
+|  |- provider.py
+|  |- LLM/
+|     |- openai_api.py
+|     |- google_api.py
+|- system/
+|  |- start/cache.json
+|  |- prompt/
+|  |  |- 猫猫.txt
+|  |  |- system_core/task_create.txt
+|  |  |- system_core/zip_history.txt
+|  |- plugins/
+|  |  |- core_control/
+|  |  |- time/
+|  |- skills/
+|     |- weather/
+|     |- web_search/
+|- users/
+|  |- kesepain/
+|     |- config.json
+|     |- chat_history/kesepain_1.json
+|- 开发文档/
+   |- 个人开发框架.txt
+   |- action开发文档.txt
+   |- agent开发文档.txt
+   |- LLM开发文档.txt
+   |- provider开发文档.txt
+   |- start启动文件要求.txt
+   |- date_analyze文件要求.txt
+   |- chat文档要求.txt
+   |- memory文件要求.txt
+   |- 传参参考.txt
+   |- 策划书.txt
+
+三、主运行链路
+1. `start.py`
+   - 复制 `system/start/cache.json` 到 `core/temp/cache.json`。
+   - 枚举 `users/` 下的用户目录，终端选择用户。
+   - 读取 `users/<user>/config.json`，把用户配置写入运行缓存。
+   - 调起 `core/date_analyze.py type:start`。
+
+2. `core/date_analyze.py`
+   - `type:start` 链路：
+     - 调 `core/chat.py type:start`
+     - 调 `core/memory.py type:read`
+     - 调 `core/agent.py type:start`
+   - `type:continue` 链路：
+     - 先调 `core/memory.py type:continue` 保存上一轮问答
+     - 再调 `core/chat.py type:continue` 接收下一句输入
+     - 再调 `core/memory.py type:read` 回填最新历史
+     - 最后调 `core/agent.py type:continue`
+
+3. `core/chat.py`
+   - 负责终端输入和核心控制命令处理。
+   - 普通输入写入 `core/temp/cache.json.user_input`。
+   - 每次用户输入新一句话时：
+     - `tool_log.tool_call_count` 重置为 `0`
+     - 保留已有 `tool_log.num_*`
+     - 记录 `tool_log.current_turn_log_offset`，标记当前句工具日志起点
+   - 内置命令通过 `system/plugins/core_control/core_chat.py` 处理。
+
+4. `core/memory.py`
+   - `type:read`
+     - 读取用户历史文件
+     - 清理模板占位消息
+     - 把最近 `memory_chat_num` 条消息写入 `core/temp/cache.json.history_date`
+   - `type:continue`
+     - 按 `memory_save` 决定是否把本轮 `user_input` / `LLM_output` 写回历史文件
+     - 当历史条数超过 `history_max` 时，调用 `provider/provider.py type:zip` 做摘要压缩
+
+5. `core/agent.py`
+   - `type:start`
+     - 读取 `core/config.json`
+     - 把 `history_max`、`history_zip_to_num`、`single_chat_tools_use_num` 写入运行缓存
+     - 调 `provider/provider.py type:start`
+   - `type:continue`
+     - 直接调 `provider/provider.py type:start`
+
+6. `provider/provider.py`
+   - 负责组装发送给 LLM 的运行 payload。
+   - 支持三条入口：
+     - `type:start`，普通聊天模式
+     - `type:tool`，带工具日志的继续决策模式
+     - `type:zip`，历史压缩模式
+   - `type:start` 和 `type:tool` 共用同一套返回处理逻辑：
+     - `type:message`：写 `LLM_output`，累加 `token_use`，输出 `output|token:n`，然后回到 `date_analyze.py type:continue`
+     - `type:task`：向 `tool_log` 追加一条待执行日志，然后调 `core/action.py`
+   - `type:tool` 只会把“当前句”的 `tool_log` 发送给 LLM，不会把跨句保留的旧工具日志全部再次送入上下文。
+
+7. `provider/LLM/openai_api.py`
+   - 当前作为 OpenAI 兼容接口适配器使用。
+   - 处理三种 payload：
+     - `type:chat`
+     - `type:tool`
+     - `type:prompt`
+   - 用两条 `system message` 加一条 `user message` 调用 `/chat/completions`。
+   - 当前 `deepseek` 通过这个适配器接入，因为接口兼容 OpenAI。
+
+四、工具闭环
+1. 当前工具闭环已经打通：
+   - `provider type:start`
+   - LLM 返回 `type:task`
+   - `core/action.py` 执行工具
+   - 工具结果回写 `core/temp/cache.json.tool_log`
+   - `provider type:tool`
+   - LLM 基于工具结果继续决策
+   - 最终返回 `type:message`
+
+2. `core/action.py` 当前能力
+   - 解析 `type:task` / `command:<内容>`。
+   - 把当前命令写回 pending 的 `tool_log.num_X.action`。
+   - 真实执行前输出 `执行:<指令内容>`。
+   - 支持两类命令：
+     - `tool_search`
+     - `tool_use`
+
+3. `tool_search` 当前行为
+   - `tool_search`
+     - 扫描 `system/plugins/*/plugin.json`
+     - 扫描 `system/skills/*/skill.json`
+     - 扫描 `system/mcp/*/mcp.json`
+     - 汇总命令和说明
+   - `tool_search tools`
+     - 返回目录视图
+   - `tool_search <具体工具>`
+     - 支持按目录名、真实命令和部分别名匹配
+     - 返回对应 `*_use.txt`
+
+4. `tool_use` 当前行为
+   - 先从工具元数据中匹配具体命令。
+   - 插件运行目录：
+     - `plugin.run`
+   - 技能运行目录：
+     - `skill_run`
+   - MCP 运行目录：
+     - `mcp_run`
+     - `mcp.run`
+   - 当前 `mcp` 目录为空，命中时会返回未实现本地执行类错误。
+
+5. 当前已接入工具
+   - plugins
+     - `time`
+   - skills
+     - `weather`
+     - `web_search`
+   - `core_control` 是内置控制插件目录，但没有 `plugin.json`，不参与默认工具发现。
+
+6. `tool_log` 当前语义
+   - `tool_use`
+     - 用户是否允许工具调用
+   - `single_chat_tools_use_num`
+     - 单句用户输入内允许的最大工具调用次数
+   - `tool_call_count`
+     - 当前这句用户输入已经执行的工具次数
+   - `current_turn_log_offset`
+     - 当前句在保留日志中的起点
+   - `num_*`
+     - 工具日志明细，保留最近若干条，不会在每句输入时清空
+
+7. 当前句工具日志规则
+   - 新输入到来时：
+     - 不清空旧 `num_*`
+     - 重置 `tool_call_count`
+     - 更新 `current_turn_log_offset`
+   - 当前句的重复工具复用、次数限制、发送给 LLM 的 `tool:` 上下文，都只基于 `current_turn_log_offset` 之后的日志。
+
+五、当前配置来源
+1. `users/<user>/config.json`
+   - `name`
+   - `prompt`
+   - `API.provider`
+   - `API.key`
+   - `API.model`
+   - `history.memory_chat_num`
+   - `memory.memory_path`
+   - `memory.memory_use`
+   - `memory.memory_save`
+   - `tool_use`
+
+2. `core/config.json`
+   - `history_max`
+   - `history_zip_to_num`
+   - `single_chat_tools_use_num`
+   - `zip_history.API`
+   - `zip_history.API_KEY`
+   - `zip_history.base_url`
+   - `zip_history.model`
+   - `zip_history.prompt`
+   - `task_prompt`
+
+3. `provider/api.json`
+   - 当前只注册了 `deepseek`
+   - `deepseek` 使用 `openai_api.py` 作为 API 适配文件
+   - 当前允许模型：
+     - `deepseek-chat`
+     - `deepseek-reasoner`
+
+4. `system/start/cache.json`
+   - 是运行缓存模板
+   - 当前模板中已经包含：
+     - `tool_log.tool_call_count`
+     - `tool_log.current_turn_log_offset`
+
+5. `core/temp/cache.json`
+   - 是运行时唯一共享缓存
+   - 当前主要字段：
+     - `name`
+     - `prompt`
+     - `API`
+     - `history`
+     - `memory`
+     - `user_input`
+     - `LLM_output`
+     - `history_date`
+     - `tool_log`
+     - `token_use`
+
+六、当前实现状态
+1. 已实现
+   - 启动模板复制与用户配置装载
+   - 普通对话主链
+   - 历史读取与历史写回
+   - 超长历史压缩
+   - OpenAI 兼容 API 调用
+   - `type:start` / `type:tool` / `type:zip`
+   - `tool_search` / `tool_use`
+   - `time` / `weather` / `web_search` 三个可执行工具
+   - 单句工具调用次数限制
+   - 当前句工具日志边界控制
+
+2. 部分实现或受限
+   - `provider/LLM/google_api.py` 仍不是可用实现
+   - `mcp` 目录预留，但当前没有本地执行工具
+   - 交互终端输入已按系统编码读取，运行缓存与代码文件继续统一使用 UTF-8
+
+七、维护规则
+1. 主链代码改动后，同步更新本文。
+2. `tool_log` 字段改动后，同步更新本文。
+3. 新增或删除工具目录后，同步更新本文中的工具清单。
+4. 不把计划中的目标状态写成当前事实。
+5. 不把未接入主链的预留模块写成已实现。
