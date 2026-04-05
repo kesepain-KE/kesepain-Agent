@@ -7,5 +7,13 @@
         ],
         "base_url": "https://api.deepseek.com/v1",
         "api_provider": "openai_api.py"
+    },
+    "openai": {
+        "name": "openai",
+        "available_models": [
+            "gpt-5.4-nano"
+        ],
+        "base_url": "https://api.openai.com/v1",
+        "api_provider": "openai_api.py"
     }
 }

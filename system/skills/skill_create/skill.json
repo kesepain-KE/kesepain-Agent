@@ -1,0 +1,7 @@
+{
+    "num_1": {
+        "command": "/创建技能",
+        "explain": "根据现有模板创建一个新的skill骨架",
+        "run_file": "skill_create.py"
+    }
+}

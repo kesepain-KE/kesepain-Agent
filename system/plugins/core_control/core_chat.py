@@ -36,8 +36,9 @@ def build_empty_history():
 
 def build_empty_tool_log(tool_log):
     return {
-        "tool_use": tool_log["tool_use"],
-        "single_chat_tools_use_num": tool_log["single_chat_tools_use_num"],
+        "tool_use": tool_log.get("tool_use", False),
+        "single_chat_tools_use_num": tool_log.get("single_chat_tools_use_num", 0),
+        "tool_log_max": tool_log.get("tool_log_max", 0),
         "tool_call_count": 0,
         "current_turn_log_offset": 0,
     }

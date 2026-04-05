@@ -24,35 +24,8 @@ def get_history_path(cache_data):
     return root_dir / "users" / cache_data["name"] / "chat_history" / cache_data["memory"]["memory_path"]
 
 
-def get_sorted_messages(history_data):
-    messages = list(history_data["standard_chat"]["messages"].values())
-    messages.sort(key=lambda item: item["num"])
-    return messages
-
-
-def is_template_message(message):
-    return (
-        message["time"] == "time"
-        and message["input"] == "input"
-        and message["output"] == "output"
-    )
-
-
-def normalize_zip_chat(zip_chat):
-    if isinstance(zip_chat, list):
-        return ""
-    return zip_chat
-
-
-def normalize_history_data(history_data):
-    messages = get_sorted_messages(history_data)
-    real_messages = []
-    for message in messages:
-        if is_template_message(message) is False:
-            real_messages.append(message)
-    history_data["zip_chat"] = normalize_zip_chat(history_data["zip_chat"])
-    history_data["standard_chat"]["messages"] = renumber_messages(real_messages)
-    return history_data
+def get_messages(history_data):
+    return list(history_data["standard_chat"]["messages"].values())
 
 
 def format_time():
@@ -60,25 +33,12 @@ def format_time():
     return f"{now.year}.{now.month}.{now.day}.{now.hour}:{now.minute:02d}:{now.second:02d}"
 
 
-def renumber_messages(messages):
-    renumbered = {}
-    for index, message in enumerate(messages, start=1):
-        renumbered[f"num_{index}"] = {
-            "num": index,
-            "time": message["time"],
-            "input": message["input"],
-            "output": message["output"],
-        }
-    return renumbered
-
-
 if payload == "type:read":
     cache_data = load_json(cache_path)
     if cache_data["memory"]["memory_use"] is True:
         history_path = get_history_path(cache_data)
-        history_data = normalize_history_data(load_json(history_path))
-        save_json(history_path, history_data)
-        messages = get_sorted_messages(history_data)
+        history_data = load_json(history_path)
+        messages = get_messages(history_data)
         latest_messages = messages[-cache_data["history"]["memory_chat_num"] :]
         history_date = {"zip_date": history_data["zip_chat"]}
         for index, message in enumerate(latest_messages, start=1):
@@ -96,11 +56,11 @@ if payload == "type:read":
 
 if payload == "type:continue":
     cache_data = load_json(cache_path)
-    history_path = get_history_path(cache_data)
 
     if cache_data["memory"]["memory_save"] is True:
-        history_data = normalize_history_data(load_json(history_path))
-        messages = get_sorted_messages(history_data)
+        history_path = get_history_path(cache_data)
+        history_data = load_json(history_path)
+        messages = get_messages(history_data)
         next_num = len(messages) + 1
         history_data["standard_chat"]["messages"][f"num_{next_num}"] = {
             "num": next_num,
@@ -110,8 +70,9 @@ if payload == "type:continue":
         }
         save_json(history_path, history_data)
 
-    history_data = normalize_history_data(load_json(history_path))
-    messages = get_sorted_messages(history_data)
+    history_path = get_history_path(cache_data)
+    history_data = load_json(history_path)
+    messages = get_messages(history_data)
     history_max = cache_data["history"]["history_max"]
     history_zip_to_num = cache_data["history"]["history_zip_to_num"]
 
@@ -121,14 +82,13 @@ if payload == "type:continue":
         zip_lines = ["type:zip", "zip:"]
         for index, message in enumerate(zip_messages, start=1):
             zip_lines.append(f"{index}.{message['time']}|{message['input']}|{message['output']}")
-        zip_result = subprocess.run(
+        zip_output = subprocess.run(
             [sys.executable, str(root_dir / "provider" / "provider.py"), "\n".join(zip_lines)],
             stdout=subprocess.PIPE,
             text=True,
             encoding="utf-8",
-        )
-        history_data["zip_chat"] = zip_result.stdout.strip()[4:]
-        history_data["standard_chat"]["messages"] = renumber_messages(messages[zip_num:])
+        ).stdout.strip()
+        history_data["zip_chat"] = zip_output[4:]
         save_json(history_path, history_data)
 
     print("type:runed")

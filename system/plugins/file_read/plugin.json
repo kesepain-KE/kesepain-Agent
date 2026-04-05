@@ -1,0 +1,7 @@
+{
+    "num_1": {
+        "command": "/文件读取",
+        "explain": "读取工作区内文件内容",
+        "run_file": "file_read.py"
+    }
+}

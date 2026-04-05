@@ -1,0 +1,12 @@
+{
+    "num_1": {
+        "command": "/文件搜索",
+        "explain": "搜索本地文件",
+        "run_file": "file_search.py"
+    },
+    "num_2": {
+        "command": "/框架查询",
+        "explain": "查询框架信息",
+        "run_file": "file_search.py"
+    }
+}

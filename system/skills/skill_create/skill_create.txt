@@ -1,0 +1,22 @@
+实现以下要求：
+1.运行文件，输入：
+    /创建技能 <skill目录名> | <指令名称> | <指令说明>
+2.功能：
+    在 system\skills 下创建新的 skill 目录，并生成以下文件：
+    skill.json
+    skill_create.txt
+    skill_use.txt
+    skill_run\<skill目录名>.py
+    skill_run\config.json
+3.输出：
+    返回创建结果、skill目录、指令名称、运行文件位置
+4.示例：
+    /创建技能 news_search | 新闻查询 | 查询新闻信息
+
+    创建成功
+    skill目录：system\skills\news_search
+    指令名称：/新闻查询
+    运行文件：system\skills\news_search\skill_run\news_search.py
+5.约束：
+    skill目录名仅支持字母、数字、下划线、中划线
+    如果目录已存在，直接提示，不要覆盖

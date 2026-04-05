@@ -1,7 +1,8 @@
 {
   "history_max": 100,
   "history_zip_to_num": 50,
-  "single_chat_tools_use_num": 30,
+  "single_chat_tools_use_num": 20,
+  "tool_log_max": 30,
   "zip_history":{
     "API": "deepseek",
     "API_KEY": "",

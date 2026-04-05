@@ -1,0 +1,32 @@
+实现以下要求：
+指令1：
+    1.运行文件，输入：
+        /文件搜索 <关键词>
+    2.输出：
+        <匹配文件路径列表>
+    3.示例：
+        /文件搜索 cache.json
+
+        core\temp\cache.json
+
+    <注意>
+    1.输出格式按行输出
+    2.内容搜索限制在此工作区
+指令2：
+    1.运行文件，输入：
+        /框架查询 <工作区相对文件地址>
+    2.输出：
+        <该文件及其子文件的文件框架>
+    3.示例：
+        /框架查询 system\plugins\file_search
+
+        file_search
+        |   |-plugin.json
+        |   |-plugin_use.txt
+        |   |-plugin_create.txt
+        |-plugin.run
+            |-file_search.py
+
+    <注意>
+    1.输出格式按行输出
+    2.内容搜索限制在此工作区
