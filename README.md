@@ -1,30 +1,71 @@
+已帮你整理为**工程级 README（结构清晰 + GitHub友好）**，同时修复层级、命令分区和说明一致性：
+
+---
+
 # kesepain-Agent
 
-一个以本地 Python 脚本为主链的终端 Agent 框架。当前仓库已经具备用户选择、历史读写、历史摘要压缩、控制命令拦截、指令目录、任务链、文件工具、时间查询、天气查询和网络搜索能力。
+一个以本地 Python 脚本为主链的终端 Agent 框架。
+当前架构为 **单进程入口 + 多脚本调度**，已具备完整的对话、任务、工具与技能执行能力。
 
-项目现在是“单进程入口 + 多脚本调度”的形态，核心路径是：
+---
+
+## 一、核心架构
+
+主执行链：
 
 ```text
 start.py
--> core/date_analyze.py
--> core/chat.py / core/memory.py / core/agent.py
--> provider/provider.py
--> core/action.py
+→ core/date_analyze.py
+→ core/chat.py / core/memory.py / core/agent.py
+→ provider/provider.py
+→ core/action.py
 ```
 
-## 当前能力
+架构特点：
 
-- 终端多轮对话
-- 用户级配置与历史文件隔离
-- 历史摘要压缩
-- 本地控制命令：`/帮助`、`/清除`、`/退出`
-- 指令目录：`/查询全部指令`、`/查看指令说明 <指令>`
-- 任务链：`/任务创建`、`/任务进度查看`、`/任务标注`
-- 文件工具：`/文件查找`、`/文件夹内部框架查看`、`/文件读取`
-- 实用技能：`/查询时间`、`/天气查询`、`/网络搜索`
-- OpenAI 兼容接口调用，当前可走 `deepseek` 和 `openai`
+* 单入口调度（start.py）
+* 核心逻辑分层（chat / memory / agent）
+* 工具与技能模块化（plugins / skills）
+* Provider 抽象统一接口
 
-## 当前目录
+---
+
+## 二、当前能力
+
+### 1. 对话与记忆
+
+* 终端多轮对话
+* 用户级隔离（配置 + 历史）
+* 历史摘要压缩（自动裁剪上下文）
+
+### 2. 控制系统
+
+* 控制命令拦截
+* 指令目录查询机制
+* 命令统一解析入口（action.py）
+
+### 3. 工具系统（Plugins）
+
+* 文件系统操作
+* 任务链执行
+* 时间查询
+
+### 4. 技能系统（Skills）
+
+* 天气查询
+* 网络搜索
+
+### 5. LLM 能力
+
+* OpenAI 兼容接口
+* 支持：
+
+  * `deepseek`
+  * `openai`
+
+---
+
+## 三、项目结构
 
 ```text
 kesepain-Agent/
@@ -57,46 +98,69 @@ kesepain-Agent/
 │  │  └─ web_search/
 │  └─ start/
 └─ users/
+```
 
-## 当前命令
+---
 
-### 控制命令
+## 四、命令体系
 
-- `/帮助`
-- `/清除`
-- `/退出`
+### 1. 控制命令
 
-### 插件命令
+```text
+/帮助
+/清除
+/退出
+```
 
-- `/查询全部指令`
-- `/查看指令说明 <特定指令>`
-- `/文件查找 <具体的文件名，支持文件夹>`
-- `/文件夹内部框架查看 <具体的文件名>`
-- `/文件读取 <相对路径>`
-- `/任务创建 <任务描述>|<任务步骤1>|<任务步骤2>|...`
-- `/任务进度查看`
-- `/任务标注 <任务序号>`
-- `/查询时间`
+---
 
-### 技能命令
+### 2. 插件命令
 
-- `/天气查询 <城市> <具体时间，一般是前后3天>`
-- `/网络搜索 <多个关键词>`
+```text
+/查询全部指令
+/查看指令说明 <指令>
 
-### 当前兼容的旧指令
+# 文件
+/文件查找 <文件名>
+/文件夹内部框架查看 <文件名>
+/文件读取 <路径>
 
-- `/任务查询`
-- `/任务完成`
-- `/文件搜索`
-- `/框架查询`
-- `/查询天气`
-- `/网络查询`
+# 任务
+/任务创建 <描述>|<步骤1>|<步骤2>|...
+/任务进度查看
+/任务标注 <序号>
 
-## 快速开始
+# 工具
+/查询时间
+```
 
-### 1. 依赖
+---
 
-当前根主链没有 Python 第三方依赖，`requirements.txt` 为空说明文件。直接使用本机 Python 即可运行。
+### 3. 技能命令
+
+```text
+/天气查询 <城市> <时间>
+/网络搜索 <关键词>
+```
+
+---
+
+### 4. 兼容旧指令
+
+```text
+/任务查询
+/任务完成
+/文件搜索
+/框架查询
+/查询天气
+/网络查询
+```
+
+---
+
+## 五、快速开始
+
+### 1. 运行环境
 
 ```bash
 python start.py
@@ -104,13 +168,24 @@ python start.py
 
 说明：
 
-- 当前项目更偏向 Windows 终端环境
-- `weather` 技能依赖 PowerShell 的 `Invoke-WebRequest`
-- 网络功能依赖外部 API 和网络连接，不依赖 Python 第三方包
+* 无第三方依赖（requirements.txt 为空）
+* 推荐环境：Windows
+* 部分能力依赖系统组件：
+
+  * PowerShell（天气查询）
+  * 网络 API（搜索能力）
+
+---
 
 ### 2. 用户配置
 
-编辑 `users/<user>/config.json`：
+路径：
+
+```text
+users/<user>/config.json
+```
+
+示例：
 
 ```json
 {
@@ -133,13 +208,19 @@ python start.py
 
 说明：
 
-- 实际运行时会以用户目录名覆盖 `name`
-- `memory.user_memory_path` 会桥接到缓存里的 `memory.memory_path`
-- `tool_use_allow` 会桥接到缓存里的 `tool_log.tool_use`
+* `name` 会被用户目录名覆盖
+* memory路径会映射到缓存系统
+* tool_use_allow 控制工具调用权限
+
+---
 
 ### 3. 核心配置
 
-编辑 `core/config.json`：
+路径：
+
+```text
+core/config.json
+```
 
 ```json
 {
@@ -158,42 +239,61 @@ python start.py
 }
 ```
 
-### 4. 启动
+---
+
+### 4. 启动流程
 
 ```bash
 python start.py
 ```
 
-启动后会列出 `users/` 目录下的用户，选择后进入终端交互。
+启动后：
 
-## 运行时事实
+1. 自动扫描 `users/`
+2. 选择用户
+3. 进入终端交互
 
-- 运行共享缓存是 `core/temp/cache.json`
-- 当前任务状态文件是 `core/temp/task.json`
-- 用户历史文件位于 `users/<user>/chat_history/<memory_path>`
-- 主人格 prompt 位于 `system/prompt/soul_prompt/`
-- 任务 prompt 位于 `system/prompt/system_core/task.txt`
-- 历史压缩 prompt 位于 `system/prompt/system_core/zip_history.txt`
+---
 
-## Provider
+## 六、运行时数据
 
-当前 `provider/api.json` 已注册：
+```text
+缓存：core/temp/cache.json
+任务：core/temp/task.json
+历史：users/<user>/chat_history/
+人格：system/prompt/soul_prompt/
+任务提示词：system/prompt/system_core/task.txt
+历史压缩：system/prompt/system_core/zip_history.txt
+```
 
-- `deepseek`
-- `openai`
+---
 
-当前允许模型：
+## 七、Provider
 
-- `deepseek-chat`
-- `deepseek-reasoner`
-- `gpt-5.4-mini`
+已注册：
 
-当前 `deepseek` 和 `openai` 都通过 `provider/LLM/openai_api.py` 以 OpenAI 兼容接口方式调用。`provider/LLM/google_api.py` 目前还没有接入主链。
+```text
+deepseek
+openai
+```
 
-## 已知限制
+支持模型：
 
-- `system/mcp/` 目录存在，但当前没有实际可执行的 MCP 工具
-- `tool_log` 当前是最近 N 条滑动窗口，不是严格按轮次切分
-- `provider.py` 和 `action.py` 使用的日志裁剪字段不完全一致
-- `system/prompt/system_core/task.txt` 里仍残留 `/任务进度查询` 的旧文案，真实命令是 `/任务进度查看`
-- 当前没有自动化测试套件
+```text
+deepseek-chat
+deepseek-reasoner
+gpt-5.4-mini
+```
+
+实现方式：
+
+* 统一通过：
+
+```text
+provider/LLM/openai_api.py
+```
+
+说明：
+
+* 使用 OpenAI 兼容接口
+* `google_api.py` 尚未接入主链
