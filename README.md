@@ -1,7 +1,3 @@
-已帮你整理为**工程级 README（结构清晰 + GitHub友好）**，同时修复层级、命令分区和说明一致性：
-
----
-
 # kesepain-Agent
 
 一个以本地 Python 脚本为主链的终端 Agent 框架。
