@@ -1,6 +1,6 @@
 {
     "name": "name",
-    "prompt": "prompt",
+    "soul_prompt": "prompt",
     "API": {
         "provider": "provider",
         "key": "key",
@@ -12,18 +12,27 @@
         "memory_chat_num":"memory_chat_num"
     },
     "memory":{
-        "memory_path":"memory_path",
-        "memory_use":"memory_use",
-        "memory_save":"memory_save"
+        "memory_path":"memory_path"
     },
     "user_input": "user_input",
     "LLM_output": "LLM_output",
     "history_date":{
-        "zip_date":"zip_date"
+        "zip_date":"zip_date",
+        "history_1":{
+            "time":"",
+            "input":"",
+            "output":""
+        }
     },
     "tool_log":{
-        "tool_use":"tool_use",
-        "single_chat_tools_use_num": "single_chat_tools_use_num"
+        "tool_use_allow":"tool_use_allow",
+        "single_chat_tools_use_num": "single_chat_tools_use_num",
+        "tool_log_max": "tool_log_max",
+        "tool_single_count": "0",
+        "tool_1": {
+            "action": "",
+            "result": ""
+        }
     },
-    "token_use": 0
+    "token_used": 0
 }

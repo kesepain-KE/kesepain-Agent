@@ -11,40 +11,41 @@ def load_payload():
     return ""
 
 
+def safe_reconfigure_text_stream(stream):
+    reconfigure = getattr(stream, "reconfigure", None)
+    if callable(reconfigure):
+        reconfigure(encoding="utf-8")
+
+
 payload = load_payload()
-
-if hasattr(sys.stdout, "reconfigure"):
-    sys.stdout.reconfigure(encoding="utf-8")
-
-if hasattr(sys.stdin, "reconfigure"):
-    sys.stdin.reconfigure(encoding="utf-8")
-
-if hasattr(sys.stderr, "reconfigure"):
-    sys.stderr.reconfigure(encoding="utf-8")
+safe_reconfigure_text_stream(sys.stdout)
+safe_reconfigure_text_stream(sys.stdin)
+safe_reconfigure_text_stream(sys.stderr)
 
 
-def parse_chat_tool_payload(text):
+def parse_chat_payload(text):
+    """Strict parser for start mode payload defined in LLM docs."""
     lines = text.splitlines()
     data = {
-        "main_soul": "",
-        "else_for_run": "",
+        "soul_prompt": "",
+        "task_prompt": "",
         "base_url": "",
         "API_key": "",
         "API_model": "",
         "user_input": "",
         "zip": "",
         "history_lines": [],
-        "tool_lines": [],
     }
     state = ""
-    for line in lines[2:]:
-        if line.startswith("main_soul="):
-            state = "main_soul"
-            data["main_soul"] = line[len("main_soul=") :]
+
+    for line in lines[1:]:
+        if line.startswith("soul_prompt:"):
+            state = "soul_prompt"
+            data["soul_prompt"] = line[len("soul_prompt:") :]
             continue
-        if line.startswith("else_for_run="):
-            state = "else_for_run"
-            data["else_for_run"] = line[len("else_for_run=") :]
+        if line.startswith("task_prompt:"):
+            state = "task_prompt"
+            data["task_prompt"] = line[len("task_prompt:") :]
             continue
         if line.startswith("base_url:"):
             state = ""
@@ -62,27 +63,95 @@ def parse_chat_tool_payload(text):
             state = ""
             data["user_input"] = line[len("user_input:") :]
             continue
-        if line == "history:":
-            state = "history"
-            continue
         if line.startswith("zip:"):
-            state = ""
+            state = "history"
             data["zip"] = line[len("zip:") :]
             continue
-        if line == "tool:":
+
+        if state == "soul_prompt":
+            data["soul_prompt"] = data["soul_prompt"] + "\n" + line
+            continue
+        if state == "task_prompt":
+            data["task_prompt"] = data["task_prompt"] + "\n" + line
+            continue
+        if state == "history" and line != "":
+            data["history_lines"].append(line)
+
+    return data
+
+
+def parse_tool_payload(text):
+    """Parser for tool mode payload defined in LLM docs."""
+    lines = text.splitlines()
+    data = {
+        "soul_prompt": "",
+        "task_prompt": "",
+        "base_url": "",
+        "API_key": "",
+        "API_model": "",
+        "user_input": "",
+        "zip": "",
+        "history_lines": [],
+        "tool_lines": [],
+    }
+    state = ""
+
+    def parse_assign_value(line, key):
+        if line.startswith(f"{key}="):
+            return line[len(key) + 1 :]
+        if line.startswith(f"{key}:"):
+            return line[len(key) + 1 :]
+        return None
+
+    for line in lines[1:]:
+        soul_value = parse_assign_value(line, "soul_prompt")
+        if soul_value is not None:
+            state = "soul_prompt"
+            data["soul_prompt"] = soul_value
+            continue
+
+        task_value = parse_assign_value(line, "task_prompt")
+        if task_value is not None:
+            state = "task_prompt"
+            data["task_prompt"] = task_value
+            continue
+
+        if line.startswith("base_url:"):
+            state = ""
+            data["base_url"] = line[len("base_url:") :]
+            continue
+        if line.startswith("API_key:"):
+            state = ""
+            data["API_key"] = line[len("API_key:") :]
+            continue
+        if line.startswith("API_model:"):
+            state = ""
+            data["API_model"] = line[len("API_model:") :]
+            continue
+        if line.startswith("user_input:"):
+            state = ""
+            data["user_input"] = line[len("user_input:") :]
+            continue
+        if line.startswith("zip:"):
+            state = "history"
+            data["zip"] = line[len("zip:") :]
+            continue
+        if line == "tool_log:" or line == "tool:":
             state = "tool"
             continue
-        if state == "main_soul":
-            data["main_soul"] = data["main_soul"] + "\n" + line
+
+        if state == "soul_prompt":
+            data["soul_prompt"] = data["soul_prompt"] + "\n" + line
             continue
-        if state == "else_for_run":
-            data["else_for_run"] = data["else_for_run"] + "\n" + line
+        if state == "task_prompt":
+            data["task_prompt"] = data["task_prompt"] + "\n" + line
             continue
-        if state == "history":
+        if state == "history" and line != "":
             data["history_lines"].append(line)
             continue
-        if state == "tool":
+        if state == "tool" and line != "":
             data["tool_lines"].append(line)
+
     return data
 
 
@@ -96,6 +165,7 @@ def parse_prompt_payload(text):
         "zip_lines": [],
     }
     state = ""
+    model_loaded = False
     for line in lines[1:]:
         if line.startswith("prompt:"):
             state = "prompt"
@@ -112,6 +182,7 @@ def parse_prompt_payload(text):
         if line.startswith("model:"):
             state = ""
             data["model"] = line[len("model:") :]
+            model_loaded = True
             continue
         if line == "zip:":
             state = "zip"
@@ -119,9 +190,44 @@ def parse_prompt_payload(text):
         if state == "prompt":
             data["prompt"] = data["prompt"] + "\n" + line
             continue
-        if state == "zip":
+        if state == "zip" and line != "":
+            data["zip_lines"].append(line)
+            continue
+        if model_loaded and line != "":
             data["zip_lines"].append(line)
     return data
+
+
+def get_missing_fields(data, required_fields):
+    missing = []
+    for key in required_fields:
+        if data.get(key, "") == "":
+            missing.append(key)
+    return missing
+
+
+def print_chat_or_tool_result(content, token):
+    lines = content.splitlines()
+    if len(lines) == 0:
+        print(f"type:message\noutput:\ntoken:{token}")
+        return
+
+    result_type = lines[0].strip()
+    if result_type == "type:message":
+        body = "\n".join(lines[1:])
+        if body.startswith("output:"):
+            body = body[len("output:") :]
+        print(f"type:message\noutput:{body}\ntoken:{token}")
+        return
+
+    if result_type == "type:task":
+        body = "\n".join(lines[1:])
+        if body.startswith("command:"):
+            body = body[len("command:") :]
+        print(f"type:task\ncommand:{body}\ntoken:{token}")
+        return
+
+    print(f"type:message\noutput:{content}\ntoken:{token}")
 
 
 def request_chat_completion(base_url, api_key, model, messages):
@@ -145,42 +251,78 @@ def request_chat_completion(base_url, api_key, model, messages):
         return json.loads(response.read().decode("utf-8"))
 
 
-def run_chat_tool(mode):
-    data = parse_chat_tool_payload(payload)
+def run_chat():
+    data = parse_chat_payload(payload)
+    missing = get_missing_fields(
+        data,
+        ["soul_prompt", "task_prompt", "base_url", "API_key", "API_model", "user_input"],
+    )
+    if len(missing) != 0:
+        print(f"type:message\noutput:LLM start模式负载缺少字段:{','.join(missing)}\ntoken:0")
+        return
+
     user_lines = [
         f"user_input:{data['user_input']}",
-        "history:",
         f"zip:{data['zip']}",
         *data["history_lines"],
     ]
-    if mode == "tool":
-        user_lines.extend(["tool:", *data["tool_lines"]])
     response_data = request_chat_completion(
         data["base_url"],
         data["API_key"],
         data["API_model"],
         [
-            {"role": "system", "content": data["main_soul"]},
-            {"role": "system", "content": data["else_for_run"]},
+            {"role": "system", "content": data["soul_prompt"]},
+            {"role": "system", "content": data["task_prompt"]},
             {"role": "user", "content": "\n".join(user_lines)},
         ],
     )
     content = response_data["choices"][0]["message"]["content"].strip()
     token = response_data["usage"]["total_tokens"]
-    lines = content.splitlines()
-    result_type = lines[0].strip()
-    if result_type == "type:message":
-        output = "\n".join(lines[1:])[len("output:") :]
-        print(f"type:message\noutput:{output}\ntoken:{token}")
-    if result_type == "type:task":
-        command = "\n".join(lines[1:])[len("command:") :]
-        print(f"type:task\ncommand:{command}\ntoken:{token}")
-    if result_type != "type:message" and result_type != "type:task":
-        print(f"type:message\noutput:{content}\ntoken:{token}")
+    print_chat_or_tool_result(content, token)
+
+
+def run_tool():
+    data = parse_tool_payload(payload)
+    missing = get_missing_fields(
+        data,
+        ["soul_prompt", "task_prompt", "base_url", "API_key", "API_model", "user_input"],
+    )
+    if len(missing) != 0:
+        print(f"type:message\noutput:LLM tool模式负载缺少字段:{','.join(missing)}\ntoken:0")
+        return
+
+    user_lines = [
+        f"user_input:{data['user_input']}",
+        f"zip:{data['zip']}",
+        *data["history_lines"],
+        "tool:",
+        *data["tool_lines"],
+    ]
+    response_data = request_chat_completion(
+        data["base_url"],
+        data["API_key"],
+        data["API_model"],
+        [
+            {"role": "system", "content": data["soul_prompt"]},
+            {"role": "system", "content": data["task_prompt"]},
+            {"role": "user", "content": "\n".join(user_lines)},
+        ],
+    )
+    content = response_data["choices"][0]["message"]["content"].strip()
+    token = response_data["usage"]["total_tokens"]
+    print_chat_or_tool_result(content, token)
 
 
 def run_prompt():
     data = parse_prompt_payload(payload)
+    missing = get_missing_fields(data, ["prompt", "key", "base_url", "model"])
+    if len(missing) != 0:
+        print(f"zip:LLM prompt模式负载缺少字段:{','.join(missing)}")
+        return
+    if len(data["zip_lines"]) == 0:
+        print("zip:")
+        return
+
     response_data = request_chat_completion(
         data["base_url"],
         data["key"],
@@ -195,11 +337,11 @@ def run_prompt():
 
 
 if payload.startswith("type:chat"):
-    run_chat_tool("chat")
+    run_chat()
 
 
 if payload.startswith("type:tool"):
-    run_chat_tool("tool")
+    run_tool()
 
 
 if payload.startswith("type:prompt"):

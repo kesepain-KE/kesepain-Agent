@@ -1,24 +1,18 @@
-# Root runtime dependencies for the current main chat loop.
+# Root Python dependencies
 #
-# Current fact:
+# Current fact on 2026-04-07:
 # - The active main chain uses only Python standard library modules.
-# - There are no third-party Python runtime packages required at this time.
+# - The currently connected plugins and skills also use only Python standard
+#   library modules.
+# - This file is intentionally kept without third-party package entries.
 #
-# Covered by this root file:
-# - start.py
-# - core/*.py
-# - provider/provider.py
-# - provider/LLM/openai_api.py
-#
-# Explicitly excluded from this root file:
-# - system/skills/**
-# - system/mcp/**
-# - system/plugins/** that are not part of the main runtime path
-# - provider/LLM/google_api.py (placeholder, not wired into the main chain)
+# Current runtime notes:
+# - DeepSeek / OpenAI calls are made through urllib in provider/LLM/openai_api.py
+# - web_search uses urllib to access Tavily
+# - weather uses PowerShell Invoke-WebRequest and does not require a Python package
 #
 # Rule:
-# - Skill-specific dependencies do not register here.
-# - If a future skill needs third-party packages, document them with that skill
-#   or place them in a skill-local dependency file.
-# - Only promote a dependency into this root file when it becomes required by the
-#   main runtime chain.
+# - Only add a package here when it becomes required by the shared runtime chain
+#   or by a plugin / skill that is expected to work out of the box in this repo.
+# - Purely optional or experimental dependencies should stay next to the module
+#   that needs them, not be promoted here by default.

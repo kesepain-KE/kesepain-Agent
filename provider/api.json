@@ -11,7 +11,7 @@
     "openai": {
         "name": "openai",
         "available_models": [
-            "gpt-5.4-nano"
+            "gpt-5.4-mini"
         ],
         "base_url": "https://api.openai.com/v1",
         "api_provider": "openai_api.py"

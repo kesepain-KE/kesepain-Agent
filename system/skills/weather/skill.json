@@ -1,7 +1,0 @@
-{
-    "num_1": {
-        "command": "/查询天气",
-        "explain": "查询特定城市天气情况",
-        "run_file": "weather.py"
-    }
-}

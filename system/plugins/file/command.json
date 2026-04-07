@@ -1,0 +1,17 @@
+{
+    "num_1": {
+        "command": "/文件查找",
+        "explain": "按名称查找文件或文件夹",
+        "run_file": "file.py"
+    },
+    "num_2": {
+        "command": "/文件夹内部框架查看",
+        "explain": "查看指定文件夹内部的目录结构",
+        "run_file": "file.py"
+    },
+    "num_3": {
+        "command": "/文件读取",
+        "explain": "读取指定相对路径的文件内容",
+        "run_file": "file.py"
+    }
+}

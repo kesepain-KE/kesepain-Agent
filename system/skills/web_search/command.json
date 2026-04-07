@@ -1,0 +1,7 @@
+{
+    "num_1": {
+        "command": "/网络搜索",
+        "explain": "根据多个关键词查询网络信息",
+        "run_file": "web_search.py"
+    }
+}

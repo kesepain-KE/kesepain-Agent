@@ -1,7 +1,0 @@
-{
-    "num_1": {
-        "command": "/查询时间",
-        "explain": "查询当前时间",
-        "run_file": "time.py"
-    }
-}

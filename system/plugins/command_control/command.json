@@ -1,0 +1,12 @@
+{
+    "num_1": {
+        "command": "/查询全部指令",
+        "explain": "查询所有可用的指令",
+        "run_file": "task.py"
+    },
+    "num_2": {
+        "command": "/查看指令说明",
+        "explain": "查看指定指令及其相关指令的详细说明",
+        "run_file": "task.py"
+    }
+}

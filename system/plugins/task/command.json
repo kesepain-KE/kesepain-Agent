@@ -1,0 +1,17 @@
+{
+    "num_1": {
+        "command": "/任务创建",
+        "explain": "根据用户需求创建任务链",
+        "run_file": "task.py"
+    },
+    "num_2": {
+        "command": "/任务进度查看",
+        "explain": "查看当前任务链的完成进度",
+        "run_file": "task.py"
+    },
+    "num_3": {
+        "command": "/任务标注",
+        "explain": "将指定任务节点标记为已完成",
+        "run_file": "task.py"
+    }
+}

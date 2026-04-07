@@ -3,12 +3,12 @@
   "history_zip_to_num": 50,
   "single_chat_tools_use_num": 20,
   "tool_log_max": 30,
-  "zip_history":{
+  "history_zip":{
     "API": "deepseek",
     "API_KEY": "",
     "base_url": "https://api.deepseek.com/v1",
     "model": "deepseek-chat",
     "prompt": "zip_history.txt"
   },
-  "task_prompt": "task_create.txt"
+  "task_prompt": "task.txt"
 } 

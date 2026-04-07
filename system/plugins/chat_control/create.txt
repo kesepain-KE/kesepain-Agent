@@ -1,0 +1,10 @@
+实现以下要求：
+[指令1]
+指令：/退出
+作用：退出对话
+[指令2]
+指令：/帮助
+作用：列出system\plugins\chat_control\command.json中的通用的命令
+[指令3]
+指令：/清除
+作用：清除core\temp\cache.json当前历史对话文件内容和工具调用日志，同时清除core\temp\cache.json里指定的用户文件的历史对话数据

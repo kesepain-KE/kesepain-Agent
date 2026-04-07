@@ -1,23 +1,20 @@
 {
-    "name": "user",
-    "soul_prompt": "猫猫.txt",
-    "API": {
-        "provider": "deepseek",
-        "key": "",
-        "model": "deepseek-chat"
-    },
-    "history": {
-        "history_max": 100,
-        "history_zip_to_num": 50,
-        "memory_chat_num": 25
-    },
-    "memory": {
-        "memory_path": "user_1.json"
-    },
-    "user_input": "/退出",
-    "LLM_output": "LLM start模式负载缺少字段:API_key",
-    "history_date": {
-        "zip_date": "",
+    "zip_chat": [],
+    "standard_chat": {
+        "messages": {
+            "num_1": {
+                "num": 1,
+                "time": "time",
+                "input": "input",
+                "output": "output"
+            },
+            "num_2": {
+                "num": 2,
+                "time": "time",
+                "input": "input",
+                "output": "output"
+            }
+        },
         "history_1": {
             "time": "2026.04.07.16:07:11",
             "input": ">D:\\Anaconda\\Library\\bin\\conda.BAT activate kesepain",
@@ -38,17 +35,5 @@
             "input": "D:/Anaconda/envs/kesepain/python.exe e:/code/github上传/kesepain-Agent/密钥快速配置.py",
             "output": "LLM start模式负载缺少字段:API_key"
         }
-    },
-    "tool_log": {
-        "tool_use_allow": "tool_use_allow",
-        "single_chat_tools_use_num": 20,
-        "tool_log_max": 30,
-        "tool_single_count": 0,
-        "tool_1": {
-            "action": "",
-            "result": ""
-        },
-        "tool_use": true
-    },
-    "token_used": 0
+    }
 }

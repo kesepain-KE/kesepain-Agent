@@ -1,0 +1,17 @@
+{
+    "command_1":{
+        "command": "/退出",
+        "explain": "退出当前历史对话",
+        "run_file": "core_run.py"
+    },
+    "command_2":{
+        "command": "/清除",
+        "explain": "清除当前历史对话文件内容、工具调用日志和用户历史对话文件数据",
+        "run_file": "core_run.py"
+    },
+    "command_3":{
+        "command": "/帮助",
+        "explain": "列出通用的命令",
+        "run_file": "core_run.py"
+    }
+}
