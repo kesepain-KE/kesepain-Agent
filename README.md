@@ -56,13 +56,7 @@ kesepain-Agent/
 │  │  ├─ weather/
 │  │  └─ web_search/
 │  └─ start/
-├─ users/
-└─ 开发文档/
-   ├─ 工具创建模板/
-   ├─ 个人开发框架.txt
-   ├─ 传参参考.txt
-   └─ 其他开发文档...
-```
+└─ users/
 
 ## 当前命令
 
@@ -120,7 +114,7 @@ python start.py
 
 ```json
 {
-    "name": "kesepain",
+    "name": "user",
     "API": {
         "provider": "deepseek",
         "key": "YOUR_API_KEY",
@@ -130,7 +124,7 @@ python start.py
         "memory_chat_num": 25
     },
     "memory": {
-        "user_memory_path": "kesepain_1.json"
+        "user_memory_path": "user_1.json"
     },
     "tool_use_allow": true,
     "soul_prompt": "猫猫.txt"
@@ -196,21 +190,6 @@ python start.py
 
 当前 `deepseek` 和 `openai` 都通过 `provider/LLM/openai_api.py` 以 OpenAI 兼容接口方式调用。`provider/LLM/google_api.py` 目前还没有接入主链。
 
-## 开发文档与模板
-
-建议优先看这些文件：
-
-- [开发文档/个人开发框架.txt](开发文档/个人开发框架.txt)
-- [开发文档/传参参考.txt](开发文档/传参参考.txt)
-- [开发文档/action开发文档.txt](开发文档/action开发文档.txt)
-- [开发文档/provider开发文档.txt](开发文档/provider开发文档.txt)
-
-新增插件或技能时，可以直接参考：
-
-- [开发文档/工具创建模板/使用说明.txt](开发文档/工具创建模板/使用说明.txt)
-- [开发文档/工具创建模板/插件模板](开发文档/工具创建模板/插件模板)
-- [开发文档/工具创建模板/技能模板](开发文档/工具创建模板/技能模板)
-
 ## 已知限制
 
 - `system/mcp/` 目录存在，但当前没有实际可执行的 MCP 工具
@@ -218,7 +197,3 @@ python start.py
 - `provider.py` 和 `action.py` 使用的日志裁剪字段不完全一致
 - `system/prompt/system_core/task.txt` 里仍残留 `/任务进度查询` 的旧文案，真实命令是 `/任务进度查看`
 - 当前没有自动化测试套件
-
-## License
-
-当前仓库未声明独立 `LICENSE` 文件。
